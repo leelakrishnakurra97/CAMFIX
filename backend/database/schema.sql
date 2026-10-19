@@ -1,0 +1,149 @@
+-- CAMFIX PostgreSQL Database Schema
+-- Defines 13 Normalized Tables with foreign keys, indexes, and constraints
+
+CREATE TABLE IF NOT EXISTS roles (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(50) UNIQUE NOT NULL,
+  description TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS maintenance_teams (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  category_specialty VARCHAR(50) NOT NULL,
+  description TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS users (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  email VARCHAR(150) UNIQUE NOT NULL,
+  password_hash VARCHAR(255) NOT NULL,
+  role VARCHAR(50) NOT NULL DEFAULT 'STUDENT',
+  team_id INTEGER REFERENCES maintenance_teams(id) ON DELETE SET NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS buildings (
+  id SERIAL PRIMARY KEY,
+  code VARCHAR(20) UNIQUE NOT NULL,
+  name VARCHAR(100) NOT NULL,
+  description TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS floors (
+  id SERIAL PRIMARY KEY,
+  building_id INTEGER NOT NULL REFERENCES buildings(id) ON DELETE CASCADE,
+  floor_number INTEGER NOT NULL,
+  name VARCHAR(50) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS rooms (
+  id SERIAL PRIMARY KEY,
+  floor_id INTEGER NOT NULL REFERENCES floors(id) ON DELETE CASCADE,
+  room_number VARCHAR(20) NOT NULL,
+  name VARCHAR(100) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS assets (
+  id SERIAL PRIMARY KEY,
+  asset_id VARCHAR(50) UNIQUE NOT NULL,
+  name VARCHAR(100) NOT NULL,
+  category VARCHAR(50) NOT NULL,
+  room_id INTEGER NOT NULL REFERENCES rooms(id) ON DELETE CASCADE,
+  qr_code_data VARCHAR(255) UNIQUE NOT NULL,
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS issues (
+  id SERIAL PRIMARY KEY,
+  issue_code VARCHAR(30) UNIQUE NOT NULL,
+  student_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  asset_id INTEGER REFERENCES assets(id) ON DELETE SET NULL,
+  building_id INTEGER NOT NULL REFERENCES buildings(id) ON DELETE CASCADE,
+  floor_id INTEGER NOT NULL REFERENCES floors(id) ON DELETE CASCADE,
+  room_id INTEGER NOT NULL REFERENCES rooms(id) ON DELETE CASCADE,
+  category VARCHAR(50) NOT NULL,
+  severity VARCHAR(20) NOT NULL,
+  priority VARCHAR(20) NOT NULL,
+  priority_reason TEXT,
+  description TEXT NOT NULL,
+  before_image_url VARCHAR(255),
+  after_image_url VARCHAR(255),
+  status VARCHAR(30) NOT NULL DEFAULT 'REPORTED',
+  is_duplicate BOOLEAN DEFAULT FALSE,
+  parent_issue_id INTEGER REFERENCES issues(id) ON DELETE SET NULL,
+  reopen_count INTEGER DEFAULT 0,
+  reopen_reason TEXT,
+  sla_deadline TIMESTAMP,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS issue_images (
+  id SERIAL PRIMARY KEY,
+  issue_id INTEGER NOT NULL REFERENCES issues(id) ON DELETE CASCADE,
+  image_url VARCHAR(255) NOT NULL,
+  type VARCHAR(20) NOT NULL DEFAULT 'BEFORE',
+  uploaded_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS assignments (
+  id SERIAL PRIMARY KEY,
+  issue_id INTEGER NOT NULL REFERENCES issues(id) ON DELETE CASCADE,
+  team_id INTEGER REFERENCES maintenance_teams(id) ON DELETE SET NULL,
+  technician_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  assigned_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  accepted_at TIMESTAMP,
+  status VARCHAR(30) DEFAULT 'ASSIGNED'
+);
+
+CREATE TABLE IF NOT EXISTS issue_history (
+  id SERIAL PRIMARY KEY,
+  issue_id INTEGER NOT NULL REFERENCES issues(id) ON DELETE CASCADE,
+  actor_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  actor_name VARCHAR(100),
+  action VARCHAR(100) NOT NULL,
+  previous_status VARCHAR(30),
+  new_status VARCHAR(30),
+  notes TEXT,
+  timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS notifications (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  title VARCHAR(150) NOT NULL,
+  message TEXT NOT NULL,
+  type VARCHAR(50) DEFAULT 'INFO',
+  issue_id INTEGER REFERENCES issues(id) ON DELETE CASCADE,
+  is_read BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS sla_rules (
+  id SERIAL PRIMARY KEY,
+  category VARCHAR(50) NOT NULL,
+  severity VARCHAR(20) NOT NULL,
+  resolution_hours INTEGER NOT NULL,
+  warning_hours INTEGER NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT unique_cat_sev UNIQUE (category, severity)
+);
+
+-- Indexes for optimal querying
+CREATE INDEX IF NOT EXISTS idx_issues_status ON issues(status);
+CREATE INDEX IF NOT EXISTS idx_issues_category ON issues(category);
+CREATE INDEX IF NOT EXISTS idx_issues_priority ON issues(priority);
+CREATE INDEX IF NOT EXISTS idx_issues_building ON issues(building_id);
+CREATE INDEX IF NOT EXISTS idx_issues_student ON issues(student_id);
+CREATE INDEX IF NOT EXISTS idx_assets_qr ON assets(qr_code_data);
+CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id, is_read);

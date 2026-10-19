@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+
+# Local databases
+backend/database/*.sqlite
+backend/database/*.sqlite-*
+*.db
+*.db-*
+
+# User uploads and generated QR codes
+public/uploads/*
+!public/uploads/sample_*
+public/uploads/qrcodes/
+
+# Scratch and local-only scripts
+scratch/
+
+# Generated output and caches
+coverage/
+dist/
+build/
+.cache/
+
+# Logs, private keys, and OS/editor files
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+*.pem
+*.key
+*.p12
+*.pfx
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
