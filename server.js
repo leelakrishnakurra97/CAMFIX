@@ -7,7 +7,7 @@ const db = require('./backend/config/db');
 const seed = require('./backend/database/seed');
 const errorHandler = require('./backend/middleware/errorHandler');
 
-// Route imports
+
 const authRoutes = require('./backend/routes/auth');
 const usersRoutes = require('./backend/routes/users');
 const buildingsRoutes = require('./backend/routes/buildings');
@@ -21,16 +21,16 @@ const analyticsRoutes = require('./backend/routes/analytics');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
+
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Static Assets
+
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
 
-// Mount API Routes
+
 app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/buildings', buildingsRoutes);
@@ -41,7 +41,7 @@ app.use('/api/sla', slaRoutes);
 app.use('/api/notifications', notificationsRoutes);
 app.use('/api/analytics', analyticsRoutes);
 
-// Fallback SPA Route
+
 app.use((req, res, next) => {
   if (req.path.startsWith('/api')) {
     return res.status(404).json({ success: false, error: 'API endpoint not found' });
@@ -49,10 +49,10 @@ app.use((req, res, next) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Centralized Error Handler
+
 app.use(errorHandler);
 
-// Server startup
+
 async function startServer() {
   try {
     console.log('⚡ Initializing CAMFIX Server...');
