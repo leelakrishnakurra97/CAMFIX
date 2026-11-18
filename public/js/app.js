@@ -27,7 +27,7 @@ const app = {
       authBtn.innerText = 'Logout';
       authBtn.onclick = () => auth.clearSession();
 
-      // Render Nav based on Role
+    
       let navHtml = `
         <span class="nav-item ${this.currentView === 'dashboard' ? 'active' : ''}" onclick="app.navigate('dashboard')">Dashboard</span>
       `;
