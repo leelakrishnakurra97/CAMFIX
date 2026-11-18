@@ -1,6 +1,3 @@
-/**
- * CAMFIX Main Single-Page Application Router & UI Orchestrator
- */
 
 const app = {
   currentView: 'dashboard',
