@@ -10,7 +10,7 @@ async function seed() {
   try {
     await db.initDb();
 
-    // Read and run DDL schema
+   
     const schemaSql = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf-8');
     await db.exec(schemaSql);
     console.log(' Schema created successfully.');
