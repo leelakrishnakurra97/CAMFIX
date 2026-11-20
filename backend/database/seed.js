@@ -23,10 +23,10 @@ async function seed() {
       return;
     }
 
-    // Password Hash for all demo accounts: 'password123'
+  
     const passwordHash = await bcrypt.hash('password123', 10);
 
-    // 1. Roles
+   
     await db.query(`INSERT INTO roles (name, description) VALUES 
       ('STUDENT', 'Campus Student User'),
       ('MAINTENANCE', 'Campus Maintenance Staff Technician'),
